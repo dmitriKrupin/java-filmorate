@@ -15,10 +15,10 @@ import java.util.List;
 @RestController
 public class FilmController {
     private final static Logger log = LoggerFactory.getLogger(FilmController.class);
-    final DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
+    private final DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
     private final List<Film> filmsList = new ArrayList<>();
 
-    static long countFilmId = 1;
+    private static long countFilmId = 1;
 
     @GetMapping("/films") //получение всех фильмов.
     public List<Film> filmsGetAll() {
@@ -29,11 +29,11 @@ public class FilmController {
     public Film createFilm(@Valid @RequestBody Film film) {
         film.setId(countFilmId++);
         if (validate(film)) {
-            log.warn("Логирование при создании фильма!");
+            log.warn(String.format("Сохранение фильма с id = %d, наименование: %s", film.getId(), film.getName()));
             filmsList.add(film);
             return film;
         } else {
-            throw new ValidationException("Ошибка при добавлении фильма!");
+            throw new ValidationException("Ошибка при добавлении фильма " + film.getName() + " id: " + film.getId());
         }
     }
 
@@ -42,12 +42,12 @@ public class FilmController {
         if (validate(film)) {
             for (int i = 0; i < filmsList.size(); i++) {
                 if (filmsList.get(i).getId() == film.getId()) {
-                    log.warn("Логирование при обновлении фильма!");
+                    log.warn(String.format("Обновление фильма с id = %d, наименование: %s", film.getId(), film.getName()));
                     filmsList.set(i, film);
                 }
             }
         } else {
-            throw new ValidationException("Ошибка при обновлении фильма!");
+            throw new ValidationException("Ошибка при обновлении фильма " + film.getName() + " id: " + film.getId());
         }
         return film;
     }
@@ -58,11 +58,11 @@ public class FilmController {
         } else if (film.getDescription().length() > 200) {
             throw new ValidationException("Ошибка! Максимальная длина описания больше 200 символов!");
         } else if (LocalDate.parse(film.getReleaseDate(), formatter).isBefore(LocalDate.of(1895, 12, 28))) {
-            throw new ValidationException("Ошибка! Дата релиза — должна быть не раньше 28 декабря 1895 года");
+            throw new ValidationException("Ошибка! Дата релиза '" + film.getReleaseDate() + "' — должна быть не раньше 28 декабря 1895 года");
         } else if (film.getDuration() <= 0) {
-            throw new ValidationException("Ошибка! Продолжительность фильма должна быть положительной");
+            throw new ValidationException("Ошибка! Продолжительность фильма должна быть положительной!");
         } else if (film.getId() <= 0) {
-            throw new ValidationException("Ошибка! Такого id не должно быть!");
+            throw new ValidationException("Ошибка! Такого id '" + film.getId() + "' не должно быть!");
         } else {
             return true;
         }
