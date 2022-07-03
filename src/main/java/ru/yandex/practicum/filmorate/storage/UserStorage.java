@@ -1,13 +1,15 @@
 package ru.yandex.practicum.filmorate.storage;
 
+import ru.yandex.practicum.filmorate.model.User;
+
 /**
  * Создайте интерфейсы FilmStorage и UserStorage, в которых будут определены методы добавления, удаления и модификации объектов.
  */
 
 public interface UserStorage {
-    public void addUser();
+    void addUser(User user);
 
-    public void deleteUser();
+    void deleteUser(User user);
 
-    public void updateUser();
+    void updateUser(User user);
 }

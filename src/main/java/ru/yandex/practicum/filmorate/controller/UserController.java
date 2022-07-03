@@ -39,8 +39,8 @@ public class UserController {
 
     @GetMapping("/users") //получение списка всех пользователей.
     public List<User> usersGetAll() {
-        log.warn("Получаем список данных всех пользователей");
-        return userService.usersGetAll();
+        log.info("Получаем список данных всех пользователей");
+        return userService.getUsersAll();
     }
 
     // * 1. С помощью аннотации @PathVariable добавьте возможность получать каждый фильм и данные о пользователях
@@ -48,7 +48,7 @@ public class UserController {
     @GetMapping("/users/{id}")
     public User getUser(@PathVariable long id) {
         if (id > 0) {
-            log.warn(String.format("Получаем данные пользователя с id: %d ", id));
+            log.info(String.format("Получаем данные пользователя с id: %d ", id));
             return userService.findUserById(id);
         } else {
             throw new NotFoundException("Ошибка при запросе пользователя по идентификатору: " + id);
@@ -58,14 +58,14 @@ public class UserController {
     //2.3. GET /users/{id}/friends — возвращаем список пользователей, являющихся его друзьями.
     @GetMapping("/users/{id}/friends")
     public List<User> getFriendsList(@PathVariable long id) {
-        log.warn(String.format("Получаем список друзей пользователя с id: %d", id));
+        log.info(String.format("Получаем список друзей пользователя с id: %d", id));
         return userService.getFriendsList(id);
     }
 
     //2.4. GET /users/{id}/friends/common/{otherId} — список друзей, общих с другим пользователем.
     @GetMapping("/users/{id}/friends/common/{otherId}")
     public List<User> getCommonFriendsList(@PathVariable long id, @PathVariable long otherId) {
-        log.warn(String.format("Получаем общий список друзей пользователя с id: %d и с id: %s", id, otherId));
+        log.info(String.format("Получаем общий список друзей пользователя с id: %d и с id: %s", id, otherId));
         return userService.getCommonFriendsList(id, otherId);
     }
 
@@ -73,7 +73,7 @@ public class UserController {
     public User createUser(@Valid @RequestBody User user) {
         user.setId(userService.userIdCounter());
         if (validate(user)) {
-            log.warn(String.format("Сохранение пользователя с id: %d, наименование: %s", user.getId(), user.getName()));
+            log.info(String.format("Сохранение пользователя с id: %d, наименование: %s", user.getId(), user.getName()));
             return userService.createUser(user);
         } else {
             throw new ValidationException("Ошибка при добавлении пользователя " + user.getName() + " id: " + user.getId());
@@ -83,12 +83,8 @@ public class UserController {
     @PutMapping(value = "/users") //обновление пользователя;
     public User updateUser(@Valid @RequestBody User user) {
         if (validate(user)) {
-            for (int i = 0; i < userService.usersGetAll().size(); i++) {
-                if (userService.usersGetAll().get(i).getId() == user.getId()) {
-                    log.warn(String.format("Обновление пользователя с id: %d, наименование: %s", user.getId(), user.getName()));
-                    userService.updateUser(user);
-                }
-            }
+            log.info(String.format("Обновление пользователя с id: %d, наименование: %s", user.getId(), user.getName()));
+            userService.updateUser(user);
         } else {
             throw new ValidationException("Ошибка при обновлении пользователя " + user.getName() + " id: " + user.getId());
         }
@@ -99,7 +95,7 @@ public class UserController {
     @PutMapping(value = "/users/{id}/friends/{friendId}")
     public void addFriend(@PathVariable Long id, @PathVariable Long friendId) {
         if (id > 0 && friendId > 0) {
-            log.warn(String.format("Добавление пользователя с id: %d, в друзья пользователю с id: %s", friendId, id));
+            log.info(String.format("Добавление пользователя с id: %d, в друзья пользователю с id: %s", friendId, id));
             userService.addFriendsInFriendsList(id, friendId);
         } else {
             throw new NotFoundException("Ошибка при запросе пользователя по id: " + id + " и id друга: " + friendId);
@@ -109,7 +105,7 @@ public class UserController {
     //2.2. DELETE /users/{id}/friends/{friendId} — удаление из друзей.
     @DeleteMapping(value = "/users/{id}/friends/{friendId}")
     public void deleteFromFriendsList(@PathVariable Long id, @PathVariable Long friendId) {
-        log.warn(String.format("Удаляем пользователя с id: %d из друзей пользователя с id: %s", id, friendId));
+        log.info(String.format("Удаляем пользователя с id: %d из друзей пользователя с id: %s", id, friendId));
         userService.deleteFriendFromFriendsList(id, friendId);
     }
 
@@ -134,7 +130,6 @@ public class UserController {
             userService.minusUserIdCounter();
             throw new ValidationException("Ошибка! Электронная почта не может быть пустой и должна содержать символ @");
         } else if (user.getId() <= 0) {
-            //throw new ValidationException("Ошибка! Такого id '" + user.getId() + "' не должно быть!");
             throw new NotFoundException("Ошибка! Такого id '" + user.getId() + "' не найдено!");
         } else {
             return true;
