@@ -12,4 +12,5 @@ public class User {
     private String name; //имя для отображения может быть пустым — в таком случае будет использован логин;
     private String birthday; //дата рождения не может быть в будущем.
     private Set<Long> friendsIdList; //список id друзей
+    private boolean statusApplicationFriend; //статус для связи «дружба» между двумя пользователями
 }
