@@ -23,9 +23,9 @@ import ru.yandex.practicum.filmorate.exeption.NotFoundException;
 @Data
 public class ErrorController {
     // название ошибки
-    String error;
+    //String error;
     // подробное описание
-    String description;
+    //String description;
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
