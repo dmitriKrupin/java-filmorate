@@ -15,7 +15,7 @@ import java.util.*;
 // чтобы впоследствии пользоваться внедрением зависимостей и передавать хранилища сервисам.
 @Data
 @Component
-public class InMemoryUserStorage implements UserStorage {
+public class InMemoryUserStorage implements UserStorage { //todo: после проверки через @Qualifier можно удалить
     private final HashMap<Long, User> userList = new HashMap<>(); // key: Long id, value: User user
     private static long userIdCounter = 1;
 

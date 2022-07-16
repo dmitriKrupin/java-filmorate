@@ -1,7 +1,8 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
-import ru.yandex.practicum.filmorate.enums.Genre;
+import ru.yandex.practicum.filmorate.guide.Genre;
+import ru.yandex.practicum.filmorate.guide.MPA;
 
 import java.util.Set;
 
@@ -14,7 +15,7 @@ public class Film implements Comparable<Film> {
     private long duration; //продолжительность фильма должна быть положительной.
     private Set<Long> likesList;
     private Set<Genre> genre; //у фильма может быть сразу несколько жанров, а у поля — несколько значений
-    private Genre rating; //оценка, определяющая возрастное ограничение для фильма
+    private MPA mpa; //оценка, определяющая возрастное ограничение для фильма
 
     @Override
     public int compareTo(Film o) {

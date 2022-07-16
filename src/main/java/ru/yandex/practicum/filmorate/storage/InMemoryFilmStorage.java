@@ -17,7 +17,7 @@ import java.util.List;
 
 @Data
 @Component
-public class InMemoryFilmStorage implements FilmStorage {
+public class InMemoryFilmStorage implements FilmStorage { //todo: после проверки через @Qualifier можно удалить
     private final List<Film> filmsList = new ArrayList<>();
     private static long filmIdCounter = 1;
 
