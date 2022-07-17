@@ -2,25 +2,18 @@ package ru.yandex.practicum.filmorate.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.relational.core.sql.In;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.dao.FilmDbStorage;
+import ru.yandex.practicum.filmorate.exeption.NotFoundException;
 import ru.yandex.practicum.filmorate.guide.Genre;
 import ru.yandex.practicum.filmorate.guide.MPA;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
 
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.Types;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.sql.*;
+import java.util.*;
 
 @Component
 public class FilmDbStorageImpl implements FilmDbStorage {
@@ -32,11 +25,11 @@ public class FilmDbStorageImpl implements FilmDbStorage {
     }
 
     @Override
-    public void addFilm(Film film) { //todo: 1.4. POST .../films - добавление фильма
+    public void addFilm(Film film) { //1.4. POST .../films - добавление фильма
         //INSERT INTO FILMS (NAME, DESCRIPTION, RELEASE_DATE, DURATION, MPA_ID, GENRE_ID, RATE)
         //VALUES ('New film', 'New film about friends', '1999-04-30', 120, 2, 3, 4);
-        final String sqlQuery = "INSERT INTO FILMS (NAME, DESCRIPTION, RELEASE_DATE, DURATION, MPA_ID, GENRE_ID) " +
-                "VALUES (?, ?, ?, ?, ?, ?)";
+        final String sqlQuery = "INSERT INTO FILMS (NAME, DESCRIPTION, RELEASE_DATE, DURATION, MPA_ID) " +
+                "VALUES (?, ?, ?, ?, ?)";
         final KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement stm = connection.prepareStatement(sqlQuery, new String[]{"FILM_ID"});
@@ -44,20 +37,15 @@ public class FilmDbStorageImpl implements FilmDbStorage {
             stm.setString(2, film.getDescription());
             stm.setString(3, film.getReleaseDate());
             stm.setLong(4, film.getDuration());
-            final MPA MPA_ID = film.getMpa();
-            //  "mpa": { "id": 3}
-            //stm.setString(5, MPA_ID);
-            final Set<Genre> genreSet = film.getGenre();
-            //  "genres": [{ "id": 1}]
-            //stm.setLong(6, genreSet);
-            /*if (MPA_ID == null) {
-                stm.setNull(5);
-            } else {
-                stm.setDate(4, Date.valueOf(birthday));
-            }*/
+            stm.setLong(5, film.getMpa().getId());
             return stm;
         }, keyHolder);
+        film.setGenres(genreSetForFilm(film));
         film.setId(keyHolder.getKey().longValue());
+    }
+
+    private Set<Genre> genreSetForFilm(Film film) {
+        return film.getGenres();
     }
 
     @Override
@@ -65,27 +53,55 @@ public class FilmDbStorageImpl implements FilmDbStorage {
     }
 
     @Override
-    public void updateFilm(Film film) { //todo: 1.5. PUT  .../films/{id} - обновление фильма
-        //UPDATE FILMS t SET
-        //t.NAME = 'Film Updated',
-        //t.DESCRIPTION = 'New film update decription',
-        //t.RELEASE_DATE = '1989-04-17',
-        //t.DURATION = 190,
-        //t.GENRE_ID = 2
-        //WHERE t.FILM_ID = {id};
+    public void updateFilm(Film film) { //1.5. PUT  .../films/{id} - обновление фильма
+        final String sqlQuery = "UPDATE FILMS AS F " +
+                "SET F.NAME = ?, F.DESCRIPTION = ?, F.RELEASE_DATE = ?, F.DURATION = ?, F.MPA_ID = ?" +
+                "WHERE F.FILM_ID = ?";
+        jdbcTemplate.update(connection -> {
+            PreparedStatement stm = connection.prepareStatement(sqlQuery);
+            stm.setString(1, film.getName());
+            stm.setString(2, film.getDescription());
+            stm.setString(3, film.getReleaseDate());
+            stm.setLong(4, film.getDuration());
+            stm.setLong(5, film.getMpa().getId());
+            stm.setLong(6, film.getId());
+            return stm;
+        });
+        film.setId(film.getId());
     }
 
-    public Film findFilmById(long id) { //todo: 1.2. GET .../films/{id} - получение каждого фильма по их уникальному идентификатору
-        //SELECT *
-        //FROM FILMS
-        //WHERE id = {id};
-        return null;
+    public Film findFilmById(long id) { //1.2. GET .../films/{id} - получение каждого фильма по их уникальному идентификатору
+        final String sqlQuery = "SELECT * FROM FILMS WHERE FILM_ID = ?";
+        final List<Film> films = jdbcTemplate.query(sqlQuery, FilmDbStorageImpl::makeFilm, id);
+        if (films.size() != 1) {
+            throw new NotFoundException("Ошибка в методе findUserById, для id: " + id);
+        }
+        return films.get(0);
     }
 
-    public List<Film> getFilmsList() { //todo: 1.1. GET .../films - получение всех фильмов
-        //SELECT *
-        //FROM FILMS;
-        return null;
+    private static Film makeFilm(ResultSet rs, int rowNum) throws SQLException {
+        Film film = new Film();
+        film.setId(rs.getLong("FILM_ID"));
+        film.setName(rs.getString("NAME"));
+        film.setDescription(rs.getString("DESCRIPTION"));
+        film.setReleaseDate(rs.getString("RELEASE_DATE"));
+        film.setDuration(rs.getLong("DURATION"));
+        final long mpaId = rs.getLong("MPA_ID");
+        final MPA mpa = getMPA(mpaId);
+        film.setMpa(mpa);
+        final long genreId = rs.getLong("GENRE_ID");
+        final Set<Genre> genre = getGenre(genreId);
+        film.setGenres(genre);
+        return film;
+    }
+
+    public List<Film> getFilmsList() { //1.1. GET .../films - получение всех фильмов
+        final String sqlQuery = "SELECT * FROM FILMS";
+        final List<Film> films = jdbcTemplate.query(sqlQuery, FilmDbStorageImpl::makeFilm);
+        if (films.size() != 1) {
+            throw new NotFoundException("Ошибка в методе getFilmsList!");
+        }
+        return films;
     }
 
     public List<Film> getTenPopularFilmsOfLikes(long count) {
@@ -115,27 +131,46 @@ public class FilmDbStorageImpl implements FilmDbStorage {
         //VALUES ({id}, {userId});
     }
 
-    public void getAllGenres() { // GET /genres
-        // Пример возвращаемого значения
-        // {
-        //   “id”: 1,
-        //   “name”: “Комедия”
-        // }
+    public List<Genre> getAllGenres() { // GET /genres
+        final String sqlQuery = "SELECT * FROM GENRE";
+        final List<Genre> genreList = jdbcTemplate.query(sqlQuery, FilmDbStorageImpl::makeGenre);
+        if (genreList.size() < 6) {
+            throw new NotFoundException("Ошибка в методе getAllGenres!");
+        }
+        Collections.sort(genreList);
+        return genreList;
     }
 
-    public void getGenre(long id) { // GET /genres/{id}
+    private static Genre makeGenre(ResultSet resultSet, int rowNum) throws SQLException {
+        Genre genre = new Genre();
+        genre.setId(resultSet.getLong("GENRE_ID"));
+        genre.setName(resultSet.getString("GENRE"));
+        return genre;
+    }
+
+    public static Set<Genre> getGenre(long id) { // GET /genres/{id}
         //  "genres": [{ "id": 1}]
+        return null;
     }
 
-    public void getAllMPA() { // GET /mpa
-        // Пример возвращаемого значения
-        // {
-        //   “id”: 1,
-        //   “name”: “G”
-        // }
+    public List<MPA> getAllMPA() { // GET /mpa
+        final String sqlQuery = "SELECT * FROM MPA";
+        final List<MPA> mpaList = jdbcTemplate.query(sqlQuery, FilmDbStorageImpl::makeMPA);
+        if (mpaList.size() < 5) {
+            throw new NotFoundException("Ошибка в методе getAllMPA!");
+        }
+        return mpaList;
     }
 
-    public void getMPA(long id) { // GET /mpa/{id}
+    private static MPA makeMPA(ResultSet resultSet, int rowNum) throws SQLException {
+        MPA mpa = new MPA();
+        mpa.setId(resultSet.getLong("MPA_ID"));
+        mpa.setName(resultSet.getString("RATING_NAME"));
+        return mpa;
+    }
+
+    public static MPA getMPA(long id) { // GET /mpa/{id}
         //  "mpa": { "id": 3}
+        return null;
     }
 }

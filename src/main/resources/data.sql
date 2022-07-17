@@ -7,9 +7,9 @@ MERGE INTO MPA (MPA_ID, RATING_NAME)
            (5, 'NC17');
 
 MERGE INTO GENRE (GENRE_ID, GENRE)
-    VALUES (1, 'COMEDY'),
-           (2, 'DRAMA'),
-           (3, 'CARTOON'),
-           (4, 'THRILLER'),
-           (5, 'DOCUMENTARY'),
-           (6, 'ACTION');
+    VALUES (1, 'Комедия'),
+           (2, 'Драма'),
+           (3, 'Мультфильм'),
+           (4, 'Триллер'),
+           (5, 'Документальный'),
+           (6, 'Боевик');

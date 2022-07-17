@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exeption.NotFoundException;
+import ru.yandex.practicum.filmorate.guide.Genre;
+import ru.yandex.practicum.filmorate.guide.MPA;
 import ru.yandex.practicum.filmorate.impl.FilmDbStorageImpl;
 import ru.yandex.practicum.filmorate.impl.UserDbStorageImpl;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -98,16 +100,16 @@ public class FilmService {
         return film;*/
     }
 
-    public void getAllGenres() { // GET /genres
-        filmDbStorage.getAllGenres();
+    public List<Genre> getAllGenres() { // GET /genres
+        return filmDbStorage.getAllGenres();
     }
 
     public void getGenre(long id) { // GET /genres/{id}
         filmDbStorage.getGenre(id);
     }
 
-    public void getAllMPA() { // GET /mpa
-        filmDbStorage.getAllMPA();
+    public List<MPA> getAllMPA() { // GET /mpa
+        return filmDbStorage.getAllMPA();
     }
 
     public void getMPA(long id) { // GET /mpa/{id}

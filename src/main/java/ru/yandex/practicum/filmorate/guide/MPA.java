@@ -6,6 +6,6 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode
 public class MPA {
-    long mpaId;
-    String ratingName;
+    long id;
+    String name;
 }

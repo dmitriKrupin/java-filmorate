@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exeption.NotFoundException;
 import ru.yandex.practicum.filmorate.exeption.ValidationException;
+import ru.yandex.practicum.filmorate.guide.Genre;
+import ru.yandex.practicum.filmorate.guide.MPA;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -13,6 +15,7 @@ import javax.validation.Valid;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 public class FilmController {
@@ -99,8 +102,8 @@ public class FilmController {
     }
 
     @GetMapping(value = "/genres") // GET /genres - получение списка всех жанров
-    public void getAllGenres() {
-        filmService.getAllGenres();
+    public List<Genre> getAllGenres() {
+        return filmService.getAllGenres();
     }
 
     @GetMapping(value = "/genres/{id}") //GET /genres/{id} - получение списка жанров по идентификатору
@@ -109,8 +112,8 @@ public class FilmController {
     }
 
     @GetMapping(value = "/mpa")
-    public void getAllMPA() { // GET /mpa - получение рейтинга
-        filmService.getAllMPA();
+    public List<MPA> getAllMPA() { // GET /mpa - получение рейтинга
+        return filmService.getAllMPA();
     }
 
     @GetMapping(value = "/mpa/{id}")

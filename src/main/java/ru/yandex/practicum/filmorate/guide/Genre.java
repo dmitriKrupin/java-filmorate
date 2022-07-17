@@ -5,7 +5,12 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode
-public class Genre {
-    long genreId;
-    String genre;
+public class Genre implements Comparable<Genre> {
+    long id;
+    String name;
+
+    @Override
+    public int compareTo(Genre o) {
+        return (int) (this.getId() - o.getId());
+    }
 }
