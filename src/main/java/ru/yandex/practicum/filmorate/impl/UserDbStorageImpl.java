@@ -57,13 +57,12 @@ public class UserDbStorageImpl implements UserDbStorage {
                 "WHERE USER_ID = ?" + //{id}
                 "AND FRIENDS_ID = ?" + //{friendId}
                 "AND STATUS_APPLICATION_FRIEND = true";
-        //final KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement stm = connection.prepareStatement(sqlQuery);
             stm.setLong(1, userId);
             stm.setLong(2, friendId);
             return stm;
-        }/*, keyHolder*/);
+        });
     }
 
     @Override
@@ -71,7 +70,6 @@ public class UserDbStorageImpl implements UserDbStorage {
         final String sqlQuery = "UPDATE USERS AS U " +
                 "SET U.EMAIL = ?, U.LOGIN = ?, U.NAME = ?, U.BIRTHDAY = ? " +
                 "WHERE U.USER_ID = ?";
-        //final KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement stm = connection.prepareStatement(sqlQuery);
             stm.setString(1, user.getEmail());
@@ -85,27 +83,8 @@ public class UserDbStorageImpl implements UserDbStorage {
             }
             stm.setLong(5, user.getId());
             return stm;
-        }/*, keyHolder*/);
-        user.setId(user.getId());
-    }
-
-    public void addFriendsInFriendsList(Long userId, Long friendId) { //2.7. PUT .../users/{id}/friends/{friendId} — добавление в друзья
-        final String sqlQuery = "INSERT INTO FRIENDS_ID_LIST (USER_ID, FRIENDS_ID, STATUS_APPLICATION_FRIEND) " +
-                "VALUES (?, ?, ?)"; //VALUES ({id}, {friendId}, true);
-        //final KeyHolder keyHolder = new GeneratedKeyHolder();
-        jdbcTemplate.update(connection -> {
-            PreparedStatement stm = connection.prepareStatement(sqlQuery, new String[]{"USER_ID"});
-            stm.setLong(1, userId);
-            stm.setLong(2, friendId);
-            //И последнее небольше изменение: дружба должна стать односторонней.
-            // Это значит, что если какой-то пользователь оставил вам заявку в друзья,
-            // то он будет в списке ваших друзей, а вы в его — нет.
-            final boolean statusApplicationFriend;
-            //проверять через длину списка дружбы, если другу 1 добавился в друзья друг 2,
-            // то список друзей друга 1 будет 1, а список друзей друга 2 может быть 0 или также 1
-            stm.setBoolean(3, true); //todo: написать алгоритм выбора true или false
-            return stm;
-        }/*, keyHolder*/);
+        });
+        //user.setId(user.getId());
     }
 
     @Override
@@ -138,13 +117,35 @@ public class UserDbStorageImpl implements UserDbStorage {
         return users;
     }
 
+    public void addFriendsInFriendsList(Long userId, Long friendId) { //2.7. PUT .../users/{id}/friends/{friendId} — добавление в друзья
+        final String sqlQuery = "INSERT INTO FRIENDS_ID_LIST (USER_ID, FRIENDS_ID, STATUS_APPLICATION_FRIEND) " +
+                "VALUES (?, ?, ?)";
+        jdbcTemplate.update(connection -> {
+            PreparedStatement stm = connection.prepareStatement(sqlQuery, new String[]{"USER_ID"});
+            stm.setLong(1, userId);
+            stm.setLong(2, friendId);
+            //И последнее небольше изменение: дружба должна стать односторонней.
+            // Это значит, что если какой-то пользователь оставил вам заявку в друзья,
+            // то он будет в списке ваших друзей, а вы в его — нет.
+            final boolean statusApplicationFriend;
+            //проверять через длину списка дружбы, если другу 1 добавился в друзья друг 2,
+            // то список друзей друга 1 будет 1, а список друзей друга 2 может быть 0 или также 1
+            stm.setBoolean(3, true); //todo: написать алгоритм выбора true или false
+            return stm;
+        });
+    }
+
     @Override
-    public List<User> getFriendsList(long id) { //todo: 2.3. GET .../users/{id}/friends — возвращаем список пользователей, являющихся его друзьями
-        //```
-        //SELECT *
-        //FROM FRIENDS_ID_LIST
-        //WHERE USER_ID = {id};
-        return null;
+    public List<User> getFriendsList(long id) { //2.3. GET .../users/{id}/friends — возвращаем список пользователей, являющихся его друзьями
+        final String sqlQuery = "SELECT U.USER_ID, U.EMAIL, U.LOGIN, U.NAME, U.BIRTHDAY " +
+                "FROM FRIENDS_ID_LIST AS FL " +
+                "JOIN USERS AS U on U.USER_ID = FL.FRIENDS_ID " +
+                "WHERE FL.USER_ID = ?";
+        final List<User> users = jdbcTemplate.query(sqlQuery, UserDbStorageImpl::makeUser, id);
+        if (users.size() < 1) {
+            throw new NotFoundException("Ошибка в методе getFriendsList для id: " + id);
+        }
+        return users;
     }
 
     public List<User> getCommonFriendsList(long id, long otherId) { //todo: 2.4. GET .../users/{id}/friends/common/{otherId} — список друзей, общих с другим пользователем
