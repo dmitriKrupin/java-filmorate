@@ -87,11 +87,11 @@ public class FilmDbStorageImpl implements FilmDbStorage {
         film.setReleaseDate(rs.getString("RELEASE_DATE"));
         film.setDuration(rs.getLong("DURATION"));
         final long mpaId = rs.getLong("MPA_ID");
-        final MPA mpa = getMPA(mpaId);
-        film.setMpa(mpa);
+        //final MPA mpa = getMPA(mpaId);
+        //film.setMpa(mpa);
         final long genreId = rs.getLong("GENRE_ID");
-        final Set<Genre> genre = getGenre(genreId);
-        film.setGenres(genre);
+        //final Set<Genre> genre = getGenre(genreId);
+        //film.setGenres(genre);
         return film;
     }
 
@@ -148,9 +148,13 @@ public class FilmDbStorageImpl implements FilmDbStorage {
         return genre;
     }
 
-    public static Set<Genre> getGenre(long id) { // GET /genres/{id}
-        //  "genres": [{ "id": 1}]
-        return null;
+    public Genre getGenre(long id) { // GET /genres/{id}
+        final String sqlQuery = "SELECT * FROM GENRE WHERE GENRE_ID = ?";
+        final List<Genre> genre = jdbcTemplate.query(sqlQuery, FilmDbStorageImpl::makeGenre, id);
+        if (genre.size() != 1) {
+            throw new NotFoundException("Ошибка в методе findUserById, для id: " + id);
+        }
+        return genre.get(0);
     }
 
     public List<MPA> getAllMPA() { // GET /mpa
@@ -169,8 +173,12 @@ public class FilmDbStorageImpl implements FilmDbStorage {
         return mpa;
     }
 
-    public static MPA getMPA(long id) { // GET /mpa/{id}
-        //  "mpa": { "id": 3}
-        return null;
+    public MPA getMPA(long id) { // GET /mpa/{id}
+        final String sqlQuery = "SELECT * FROM MPA WHERE MPA_ID = ?";
+        final List<MPA> mpa = jdbcTemplate.query(sqlQuery, FilmDbStorageImpl::makeMPA, id);
+        if (mpa.size() != 1) {
+            throw new NotFoundException("Ошибка в методе findUserById, для id: " + id);
+        }
+        return mpa.get(0);
     }
 }

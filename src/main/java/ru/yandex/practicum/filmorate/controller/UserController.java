@@ -101,12 +101,10 @@ public class UserController {
     private boolean validate(User user) {
         //логин не может быть пустым и содержать пробелы;
         if (user.getLogin().isEmpty() || user.getLogin().contains(" ")) {
-            //userService.minusUserIdCounter(); todo
             throw new ValidationException("Ошибка! Логин не может быть пустым и содержать пробелы!");
         }
         //дата рождения не может быть в будущем.
         else if (LocalDate.parse(user.getBirthday(), formatter).isAfter(LocalDate.now())) {
-            //userService.minusUserIdCounter(); todo
             throw new ValidationException("Ошибка! Дата рождения: '" + user.getBirthday() + "' не может быть в будущем!");
         }
         //имя для отображения может быть пустым — в таком случае будет использован логин;
@@ -116,7 +114,6 @@ public class UserController {
         }
         //электронная почта не может быть пустой и должна содержать символ @;
         else if (user.getEmail().isEmpty() || !user.getEmail().contains("@")) {
-            //userService.minusUserIdCounter(); todo
             throw new ValidationException("Ошибка! Электронная почта не может быть пустой и должна содержать символ @");
         } else if (user.getId() < 0) {
             throw new NotFoundException("Ошибка! Такого id '" + user.getId() + "' не найдено!");

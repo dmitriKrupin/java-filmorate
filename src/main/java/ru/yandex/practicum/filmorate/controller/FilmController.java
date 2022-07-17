@@ -66,7 +66,6 @@ public class FilmController {
 
     @PostMapping(value = "/films") //добавление фильма;
     public Film createFilm(@Valid @RequestBody Film film) {
-        //film.setId(filmService.filmIdCounter()); todo
         if (validate(film)) {
             log.info(String.format("Сохранение фильма с id: %d, наименование: %s", film.getId(), film.getName()));
             return filmService.createFilm(film);
@@ -107,8 +106,8 @@ public class FilmController {
     }
 
     @GetMapping(value = "/genres/{id}") //GET /genres/{id} - получение списка жанров по идентификатору
-    public void getGenre(@PathVariable long id) {
-        filmService.getGenre(id);
+    public Genre getGenre(@PathVariable long id) {
+        return filmService.getGenre(id);
     }
 
     @GetMapping(value = "/mpa")
@@ -117,22 +116,18 @@ public class FilmController {
     }
 
     @GetMapping(value = "/mpa/{id}")
-    public void getMPA(@PathVariable long id) { // GET /mpa/{id} - получение рейтинга по идентификатору
-        filmService.getMPA(id);
+    public MPA getMPA(@PathVariable long id) { // GET /mpa/{id} - получение рейтинга по идентификатору
+        return filmService.getMPA(id);
     }
 
     private boolean validate(Film film) {
         if (film.getName().isEmpty()) {
-            //filmService.minusFilmIdCounter(); todo
             throw new ValidationException("Ошибка! Название не может быть пустым!");
         } else if (film.getDescription().length() > 200) {
-            //filmService.minusFilmIdCounter(); todo
             throw new ValidationException("Ошибка! Максимальная длина описания больше 200 символов!");
         } else if (LocalDate.parse(film.getReleaseDate(), formatter).isBefore(LocalDate.of(1895, 12, 28))) {
-            //filmService.minusFilmIdCounter(); todo
             throw new ValidationException("Ошибка! Дата релиза '" + film.getReleaseDate() + "' — должна быть не раньше 28 декабря 1895 года");
         } else if (film.getDuration() <= 0) {
-            //filmService.minusFilmIdCounter(); todo
             throw new ValidationException("Ошибка! Продолжительность фильма должна быть положительной!");
         } else if (film.getId() < 0) {
             throw new NotFoundException("Ошибка! Такого id '" + film.getId() + "' не найдено!");

@@ -27,7 +27,6 @@ public class FilmService {
     private final UserService userService;
 
     //private final InMemoryFilmStorage filmStorage = new InMemoryFilmStorage();
-    //todo: поменять на получение данных из SQL вместо InMemoryFilmStorage
     @Autowired
     public FilmService(UserService userService) {
         this.userService = userService;
@@ -104,15 +103,15 @@ public class FilmService {
         return filmDbStorage.getAllGenres();
     }
 
-    public void getGenre(long id) { // GET /genres/{id}
-        filmDbStorage.getGenre(id);
+    public Genre getGenre(long id) { // GET /genres/{id}
+        return filmDbStorage.getGenre(id);
     }
 
     public List<MPA> getAllMPA() { // GET /mpa
         return filmDbStorage.getAllMPA();
     }
 
-    public void getMPA(long id) { // GET /mpa/{id}
-        filmDbStorage.getMPA(id);
+    public MPA getMPA(long id) { // GET /mpa/{id}
+        return filmDbStorage.getMPA(id);
     }
 }
