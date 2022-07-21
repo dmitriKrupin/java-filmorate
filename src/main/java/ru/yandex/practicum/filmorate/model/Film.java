@@ -2,10 +2,7 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import ru.yandex.practicum.filmorate.guide.Genre;
-import ru.yandex.practicum.filmorate.guide.MPA;
 
-import java.util.List;
 import java.util.Set;
 
 @Data

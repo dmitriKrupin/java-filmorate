@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exeption.NotFoundException;
 import ru.yandex.practicum.filmorate.exeption.ValidationException;
-import ru.yandex.practicum.filmorate.guide.Genre;
-import ru.yandex.practicum.filmorate.guide.MPA;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -15,7 +15,6 @@ import javax.validation.Valid;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Set;
 
 @RestController
 public class FilmController {

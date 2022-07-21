@@ -1,15 +1,11 @@
 package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exeption.NotFoundException;
-import ru.yandex.practicum.filmorate.guide.Genre;
-import ru.yandex.practicum.filmorate.guide.MPA;
-import ru.yandex.practicum.filmorate.impl.FilmDbStorageImpl;
-import ru.yandex.practicum.filmorate.impl.UserDbStorageImpl;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MPA;
+import ru.yandex.practicum.filmorate.storage.impl.FilmDbStorageImpl;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
 
 import java.util.*;
 
@@ -26,39 +22,17 @@ public class FilmService {
     FilmDbStorageImpl filmDbStorage;
     private final UserService userService;
 
-    //private final InMemoryFilmStorage filmStorage = new InMemoryFilmStorage();
     @Autowired
     public FilmService(UserService userService) {
         this.userService = userService;
     }
 
-    public void addLikeForFilm(long filmId, long userId) { //добавление лайка
+    public void addLikeForFilm(long filmId, long userId) {
         filmDbStorage.addLikeForFilm(filmId, userId);
-        /*Optional<Film> film = filmDbStorage.findFilmById(filmId);
-        Set<Long> likesList;
-        if (film.isPresent()) {
-            if (film.get().getLikesList() != null) {
-                likesList = film.get().getLikesList();
-            } else {
-                likesList = new TreeSet<>();
-            }
-            likesList.add(userId);
-            film.get().setLikesList(likesList);
-        }*/
     }
 
-    public void deleteLikeForFilm(long filmId, long userId) { //удаление лайка
+    public void deleteLikeForFilm(long filmId, long userId) {
         filmDbStorage.deleteLikeForFilm(filmId, userId);
-        /*Optional<Film> film = filmDbStorage.findFilmById(filmId);
-        if (film.isPresent()) {
-            if (film.get().getLikesList() != null) {
-                Set<Long> likeList = film.get().getLikesList();
-                likeList.remove(userId);
-                film.get().setLikesList(likeList);
-            } else {
-                throw new NotFoundException("Лайка от пользователя с id: " + userId + " не найдено!");
-            }
-        }*/
     }
 
     public List<Film> getTenPopularFilmsOfLikes(long count) { //вывод популярных фильмов по количеству лайков или первых 10
@@ -90,13 +64,6 @@ public class FilmService {
 
     public Film findFilmById(long id) {
         return filmDbStorage.findFilmById(id);
-        /*Film film = new Film();
-        for (Film entry : filmDbStorage.getFilmsList()) {
-            if (entry.getId() == id) {
-                film = entry;
-            }
-        }
-        return film;*/
     }
 
     public List<Genre> getAllGenres() { // GET /genres

@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.inMemoryStorage;
 
 import lombok.Data;
 import org.springframework.stereotype.Component;
@@ -17,7 +17,7 @@ import java.util.List;
 
 @Data
 @Component
-public class InMemoryFilmStorage implements FilmStorage { //todo: после проверки через @Qualifier можно удалить
+public class InMemoryFilmStorage implements FilmStorage { //todo: можно удалить
     private final List<Film> filmsList = new ArrayList<>();
     private static long filmIdCounter = 1;
 

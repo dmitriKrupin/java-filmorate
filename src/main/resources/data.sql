@@ -1,10 +1,9 @@
-//Если вам нужны некоторые данные в базе, их инициализация обычно описывается в файле data.sql
 MERGE INTO MPA (MPA_ID, RATING_NAME)
     VALUES (1, 'G'),
            (2, 'PG'),
-           (3, 'PG13'),
+           (3, 'PG-13'),
            (4, 'R'),
-           (5, 'NC17');
+           (5, 'NC-17');
 
 MERGE INTO GENRE (GENRE_ID, GENRE)
     VALUES (1, 'Комедия'),

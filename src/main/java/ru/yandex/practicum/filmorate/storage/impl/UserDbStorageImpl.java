@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.impl;
+package ru.yandex.practicum.filmorate.storage.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -6,7 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.dao.UserDbStorage;
+import ru.yandex.practicum.filmorate.storage.dao.UserDbStorage;
 import ru.yandex.practicum.filmorate.exeption.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -44,25 +44,12 @@ public class UserDbStorageImpl implements UserDbStorage {
     }
 
     @Override
-    public void deleteUser(User user) { //todo: удаление пользователя из базы SQL
+    public void deleteUser(User user) { //удаление пользователя из базы SQL
         final String sqlQuery = "DELETE FROM USERS WHERE USER_ID = ?";
         final List<User> users = jdbcTemplate.query(sqlQuery, UserDbStorageImpl::makeUser, user.getId());
-        if (users.size() != 1) {
+        if (users.size() < 1) {
             throw new NotFoundException("Ошибка в методе deleteUser для ползователя с id: " + user.getId());
         }
-    }
-
-    public void deleteFriendFromFriendsList(Long userId, Long friendId) { //удаление пользователя из друзей
-        final String sqlQuery = "DELETE FROM FRIENDS_ID_LIST " +
-                "WHERE USER_ID = ?" + //{id}
-                "AND FRIENDS_ID = ?" + //{friendId}
-                "AND STATUS_APPLICATION_FRIEND = true";
-        jdbcTemplate.update(connection -> {
-            PreparedStatement stm = connection.prepareStatement(sqlQuery);
-            stm.setLong(1, userId);
-            stm.setLong(2, friendId);
-            return stm;
-        });
     }
 
     @Override
@@ -84,7 +71,6 @@ public class UserDbStorageImpl implements UserDbStorage {
             stm.setLong(5, user.getId());
             return stm;
         });
-        //user.setId(user.getId());
     }
 
     @Override
@@ -118,19 +104,57 @@ public class UserDbStorageImpl implements UserDbStorage {
     }
 
     public void addFriendsInFriendsList(Long userId, Long friendId) { //2.7. PUT .../users/{id}/friends/{friendId} — добавление в друзья
-        final String sqlQuery = "INSERT INTO FRIENDS_ID_LIST (USER_ID, FRIENDS_ID, STATUS_APPLICATION_FRIEND) " +
-                "VALUES (?, ?, ?)";
+        if (!validateFriendInFriendsList(userId, friendId)) {
+            final String sqlQueryUser = "INSERT INTO FRIENDS_ID_LIST (USER_ID, FRIENDS_ID, STATUS_APPLICATION_FRIEND) " +
+                    "VALUES (?, ?, ?)";
+            jdbcTemplate.update(connection -> {
+                PreparedStatement stm = connection.prepareStatement(sqlQueryUser, new String[]{"USER_ID"});
+                stm.setLong(1, userId);
+                stm.setLong(2, friendId);
+                stm.setBoolean(3, true);
+                return stm;
+            });
+            final String sqlQueryFriend = "INSERT INTO FRIENDS_ID_LIST (USER_ID, FRIENDS_ID, STATUS_APPLICATION_FRIEND) " +
+                    "VALUES (?, ?, ?)";
+            jdbcTemplate.update(connection -> {
+                PreparedStatement stm = connection.prepareStatement(sqlQueryFriend, new String[]{"USER_ID"});
+                stm.setLong(1, friendId);
+                stm.setLong(2, userId);
+                stm.setBoolean(3, false);
+                return stm;
+            });
+        } else {
+            final String sqlQueryUser = "UPDATE FRIENDS_ID_LIST AS FL " +
+                    "SET FL.STATUS_APPLICATION_FRIEND = true " +
+                    "WHERE FL.USER_ID = ? AND FRIENDS_ID = ?";
+            jdbcTemplate.update(connection -> {
+                PreparedStatement stm = connection.prepareStatement(sqlQueryUser);
+                stm.setLong(1, friendId);
+                stm.setLong(2, userId);
+                return stm;
+            });
+        }
+    }
+
+    private boolean validateFriendInFriendsList(Long userId, Long friendId) {
+        final String sqlQuery = "SELECT * FROM FRIENDS_ID_LIST " +
+                "WHERE USER_ID = ? AND FRIENDS_ID = ? AND STATUS_APPLICATION_FRIEND = false";
+        final List<User> users = jdbcTemplate.query(sqlQuery, UserDbStorageImpl::makeUser, userId, friendId);
+        if (users.size() > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public void deleteFriendFromFriendsList(Long userId, Long friendId) { //удаление пользователя из друзей
+        final String sqlQueryUser = "UPDATE FRIENDS_ID_LIST AS FL " +
+                "SET FL.STATUS_APPLICATION_FRIEND = false " +
+                "WHERE FL.USER_ID = ? AND FRIENDS_ID = ?";
         jdbcTemplate.update(connection -> {
-            PreparedStatement stm = connection.prepareStatement(sqlQuery, new String[]{"USER_ID"});
+            PreparedStatement stm = connection.prepareStatement(sqlQueryUser);
             stm.setLong(1, userId);
             stm.setLong(2, friendId);
-            //И последнее небольше изменение: дружба должна стать односторонней.
-            // Это значит, что если какой-то пользователь оставил вам заявку в друзья,
-            // то он будет в списке ваших друзей, а вы в его — нет.
-            final boolean statusApplicationFriend;
-            //проверять через длину списка дружбы, если другу 1 добавился в друзья друг 2,
-            // то список друзей друга 1 будет 1, а список друзей друга 2 может быть 0 или также 1
-            stm.setBoolean(3, true); //todo: написать алгоритм выбора true или false
             return stm;
         });
     }
@@ -140,29 +164,32 @@ public class UserDbStorageImpl implements UserDbStorage {
         final String sqlQuery = "SELECT U.USER_ID, U.EMAIL, U.LOGIN, U.NAME, U.BIRTHDAY " +
                 "FROM FRIENDS_ID_LIST AS FL " +
                 "JOIN USERS AS U on U.USER_ID = FL.FRIENDS_ID " +
-                "WHERE FL.USER_ID = ?";
+                "WHERE FL.USER_ID = ? AND FL.STATUS_APPLICATION_FRIEND = true";
         final List<User> users = jdbcTemplate.query(sqlQuery, UserDbStorageImpl::makeUser, id);
         if (users.size() < 1) {
-            throw new NotFoundException("Ошибка в методе getFriendsList для id: " + id);
+            System.out.println("Пользователь с id: " + id + " одинок! :(");
         }
         return users;
     }
 
-    public List<User> getCommonFriendsList(long id, long otherId) { //todo: 2.4. GET .../users/{id}/friends/common/{otherId} — список друзей, общих с другим пользователем
-        //```
-        //SELECT *
-        //FROM USERS
-        //WHERE USER_ID IN (
-        //    SELECT FRIENDS_ID
-        //    FROM FRIENDS_ID_LIST
-        //    WHERE FRIENDS_ID_LIST.USER_ID = {id})
-        //INTERSECT
-        //SELECT *
-        //FROM USERS
-        //WHERE USER_ID IN (
-        //    SELECT FRIENDS_ID
-        //    FROM FRIENDS_ID_LIST
-        //    WHERE FRIENDS_ID_LIST.USER_ID = {otherId});
-        return null;
+    public List<User> getCommonFriendsList(long id, long otherId) { //2.4. GET .../users/{id}/friends/common/{otherId} — список друзей, общих с другим пользователем
+        final String sqlQuery = "SELECT * " +
+                "FROM USERS " +
+                "WHERE USER_ID IN ( " +
+                "    SELECT FRIENDS_ID " +
+                "    FROM FRIENDS_ID_LIST " +
+                "    WHERE FRIENDS_ID_LIST.USER_ID = ?) " +
+                "INTERSECT " +
+                "SELECT * " +
+                "FROM USERS " +
+                "WHERE USER_ID IN ( " +
+                "    SELECT FRIENDS_ID " +
+                "    FROM FRIENDS_ID_LIST " +
+                "    WHERE FRIENDS_ID_LIST.USER_ID = ?)";
+        final List<User> commonFriendList = jdbcTemplate.query(sqlQuery, UserDbStorageImpl::makeUser, id, otherId);
+        if (commonFriendList.size() < 1) {
+            System.out.println("Для id " + id + " и " + " общих друзей нет:(");
+        }
+        return commonFriendList;
     }
 }

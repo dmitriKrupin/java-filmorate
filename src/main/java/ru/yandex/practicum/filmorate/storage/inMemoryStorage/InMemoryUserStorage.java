@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.inMemoryStorage;
 
 import lombok.Data;
 import org.springframework.stereotype.Component;
@@ -15,7 +15,7 @@ import java.util.*;
 // чтобы впоследствии пользоваться внедрением зависимостей и передавать хранилища сервисам.
 @Data
 @Component
-public class InMemoryUserStorage implements UserStorage { //todo: после проверки через @Qualifier можно удалить
+public class InMemoryUserStorage implements UserStorage { //todo: можно удалить
     private final HashMap<Long, User> userList = new HashMap<>(); // key: Long id, value: User user
     private static long userIdCounter = 1;
 

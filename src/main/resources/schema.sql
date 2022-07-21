@@ -1,3 +1,5 @@
+--new
+
 create table if not exists MPA
 (
     MPA_ID      INTEGER auto_increment,
@@ -20,6 +22,7 @@ create table if not exists GENRE
 create unique index if not exists GENRE_GENRE_UINDEX
     on GENRE (GENRE);
 
+--
 create table if not exists FILMS
 (
     FILM_ID      INTEGER auto_increment,
@@ -28,9 +31,6 @@ create table if not exists FILMS
     RELEASE_DATE CHARACTER VARYING,
     DURATION     INTEGER,
     MPA_ID       INTEGER           not null,
-    GENRE_ID     INTEGER,
-    constraint FILMS_GENRE_GENRE_ID_FK
-        foreign key (GENRE_ID) references GENRE,
     constraint FILMS_MPA_MPA_ID_FK
         foreign key (MPA_ID) references MPA
 );
@@ -41,6 +41,16 @@ create unique index if not exists FILMS_FILM_ID_UINDEX
 alter table FILMS
     add constraint if not exists FILMS_PK
         primary key (FILM_ID);
+
+create table if not exists GENRE_LIST
+(
+    GENRE_ID INTEGER not null,
+    FILM_ID  INTEGER not null,
+    constraint GENRE_LIST_FILMS_FILM_ID_FK
+        foreign key (FILM_ID) references FILMS,
+    constraint GENRE_LIST_GENRE_GENRE_ID_FK
+        foreign key (GENRE_ID) references GENRE
+);
 
 create table if not exists USERS
 (

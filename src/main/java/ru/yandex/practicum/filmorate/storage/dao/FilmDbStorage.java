@@ -1,8 +1,6 @@
-package ru.yandex.practicum.filmorate.dao;
+package ru.yandex.practicum.filmorate.storage.dao;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 /**
  * Вам пригодятся созданные ранее интерфейсы UserStorage и FilmStorage.
