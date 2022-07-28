@@ -28,9 +28,8 @@ public class FilmDbStorageImpl implements FilmDbStorage {
 
     @Override
     public void addFilm(Film film) { //1.4. POST .../films - добавление фильма
-        //todo: добавить правильную реализацию добавления нескольких жанров фильму через таблицы GENRE и GENRE_LIST
-        final String sqlQuery = "INSERT INTO FILMS (NAME, DESCRIPTION, RELEASE_DATE, DURATION, MPA_ID, GENRE_ID) " +
-                "VALUES (?, ?, ?, ?, ?, ?)";
+        final String sqlQuery = "INSERT INTO FILMS (NAME, DESCRIPTION, RELEASE_DATE, DURATION, MPA_ID) " +
+                "VALUES (?, ?, ?, ?, ?)";
         final long mpaId = film.getMpa().getId();
         final KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
@@ -40,18 +39,111 @@ public class FilmDbStorageImpl implements FilmDbStorage {
             stm.setString(3, film.getReleaseDate());
             stm.setLong(4, film.getDuration());
             stm.setLong(5, mpaId);
-            if (film.getGenres() == null) {
-                stm.setNull(6, Types.NULL);
-            } else {
-                for (Genre entry : film.getGenres()) {
-                    stm.setLong(6, entry.getId());
-                }
-            }
             return stm;
         }, keyHolder);
-        film.setMpa(setMpaForFilm(mpaId));
-        film.setGenres(setGenreForFilm(film));
         film.setId(keyHolder.getKey().longValue());
+        film.setMpa(setMpaForFilm(mpaId));
+        if (film.getGenres() != null) {
+            film.setGenres(setGenreForFilm(film));
+            addGenreInGenreList(film, film.getGenres());
+        }
+    }
+
+    @Override
+    public void updateFilm(Film film) { //1.5. PUT  .../films/{id} - обновление фильма
+        final String sqlQuery = "UPDATE FILMS AS F " +
+                "SET F.NAME = ?, F.DESCRIPTION = ?, F.RELEASE_DATE = ?, F.DURATION = ?, F.MPA_ID = ? " +
+                "WHERE F.FILM_ID = ?";
+        final long mpaId = film.getMpa().getId();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement stm = connection.prepareStatement(sqlQuery);
+            stm.setString(1, film.getName());
+            stm.setString(2, film.getDescription());
+            stm.setString(3, film.getReleaseDate());
+            stm.setLong(4, film.getDuration());
+            stm.setLong(5, mpaId);
+            film.setMpa(setMpaForFilm(mpaId));
+            stm.setLong(6, film.getId());
+            return stm;
+        });
+        if (film.getGenres() != null) {
+            if (film.getGenres().size() != 0) {
+                film.setGenres(setGenreForFilm(film));
+                updateGenreInGenreList(film);
+            } else {
+                film.setGenres(setGenreForFilm(film));
+                deleteGenreInGenreList(film);
+            }
+        }
+    }
+
+    private void addGenreInGenreList(Film film, Set<Genre> genres) {
+        for (Genre genre : genres) {
+            final String sqlQuery = "INSERT INTO GENRE_LIST (GENRE_ID, FILM_ID) " +
+                    "VALUES (?, ?)";
+            final KeyHolder keyHolder = new GeneratedKeyHolder();
+            jdbcTemplate.update(connection -> {
+                PreparedStatement stm = connection.prepareStatement(sqlQuery, new String[]{"GENRE_ID"});
+                    stm.setLong(1, genre.getId());
+                    stm.setLong(2, film.getId());
+                return stm;
+            }, keyHolder);
+        }
+        film.setGenres(genres);
+    }
+
+    private void updateGenreInGenreList(Film film) {
+        final Set<Genre> currentGenreList = findGenreListByFilmId(film.getId());
+        final Film currentFilm = findFilmById(film.getId());
+        final Set<Genre> updateGenreList = film.getGenres();
+        final List<Genre> sortedGenreList = new ArrayList<>(updateGenreList);
+        Collections.sort(sortedGenreList);
+        final Set<Genre> sortedGenreSet = new HashSet<>(sortedGenreList);
+
+        if (currentGenreList == null || currentGenreList.size() <= updateGenreList.size()) {
+            for (Genre genre : sortedGenreSet) {
+                final String sqlQuery = "MERGE INTO GENRE_LIST VALUES ( ?, ? )";
+                jdbcTemplate.update(connection -> {
+                    PreparedStatement stm = connection.prepareStatement(sqlQuery);
+                    stm.setLong(1, genre.getId());
+                    stm.setLong(2, film.getId());
+                    return stm;
+                });
+            }
+        }
+        if (currentGenreList != null && currentGenreList.size() > updateGenreList.size()) {
+            deleteGenreInGenreList(currentFilm);
+            addGenreInGenreList(film, sortedGenreSet);
+        }
+    }
+
+    private void deleteGenreInGenreList(Film film) {
+        final String sqlQuery = "DELETE FROM GENRE_LIST WHERE FILM_ID = ? ";
+        jdbcTemplate.update(connection -> {
+            PreparedStatement stm = connection.prepareStatement(sqlQuery);
+            stm.setLong(1, film.getId());
+            return stm;
+        });
+    }
+
+    private Set<Genre> findGenreListByFilmId(long filmId) {
+        final String sqlQuery = "SELECT GL.GENRE_ID, GENRE " +
+                "FROM GENRE_LIST AS GL " +
+                "JOIN GENRE AS G ON GL.GENRE_ID = G.GENRE_ID " +
+                "WHERE GL.FILM_ID = ?";
+        final Set<Genre> genreSet = new HashSet<>();
+        final List<Genre> genreList = jdbcTemplate.query(sqlQuery, this::makeGenre, filmId);
+        if (genreList.size() == 0) {
+            return null;
+        } else {
+            for (Genre genre : genreList) {
+                genreSet.add(genre);
+            }
+            if (genreSet.size() < 1) {
+                throw new NotFoundException("Ошибка в методе findGenreByFilmId, для id: " + filmId);
+            }
+        }
+        return genreSet;
     }
 
     private MPA setMpaForFilm(Long mpaId) {
@@ -63,16 +155,16 @@ public class FilmDbStorageImpl implements FilmDbStorage {
     }
 
     private Set<Genre> setGenreForFilm(Film film) {
+        Set<Genre> genres = new HashSet<>();
         if (film.getGenres() != null) {
-            Set<Genre> genres = new HashSet<>();
             for (Genre entry : film.getGenres()) {
                 Genre genre = getGenre(entry.getId());
                 genres.add(genre);
             }
-            return genres;
         } else {
             return null;
         }
+        return genres;
     }
 
     @Override
@@ -85,40 +177,6 @@ public class FilmDbStorageImpl implements FilmDbStorage {
         });
     }
 
-    @Override
-    public void updateFilm(Film film) { //1.5. PUT  .../films/{id} - обновление фильма
-        //todo: добавить правильную реализацию добавления нескольких жанров фильму через таблицы GENRE и GENRE_LIST
-        final String sqlQuery = "UPDATE FILMS AS F " +
-                "SET F.NAME = ?, F.DESCRIPTION = ?, F.RELEASE_DATE = ?, F.DURATION = ?, F.MPA_ID = ?, F.GENRE_ID = ? " +
-                "WHERE F.FILM_ID = ?";
-        final long mpaId = film.getMpa().getId();
-        jdbcTemplate.update(connection -> {
-            PreparedStatement stm = connection.prepareStatement(sqlQuery);
-            stm.setString(1, film.getName());
-            stm.setString(2, film.getDescription());
-            stm.setString(3, film.getReleaseDate());
-            stm.setLong(4, film.getDuration());
-            stm.setLong(5, mpaId);
-            film.setMpa(setMpaForFilm(mpaId));
-            if (film.getGenres() != null) {
-                if (film.getGenres().size() == 0) {
-                    stm.setNull(6, Types.NULL);
-                } else {
-                    for (Genre entry : film.getGenres()) {
-                        stm.setLong(6, entry.getId());
-                        film.setGenres(setGenreForFilm(film));
-                    }
-                }
-            } else {
-                stm.setNull(6, Types.NULL);
-            }
-            stm.setLong(7, film.getId());
-            return stm;
-        });
-        //film.setMpa(setMpaForFilm(mpaId));
-        //film.setGenres(setGenreForFilm(film));
-    }
-
     public Film findFilmById(long id) { //1.2. GET .../films/{id} - получение каждого фильма по их уникальному идентификатору
         final String sqlQuery = "SELECT * FROM FILMS WHERE FILM_ID = ?";
         final List<Film> films = jdbcTemplate.query(sqlQuery, this::makeFilm, id);
@@ -129,7 +187,6 @@ public class FilmDbStorageImpl implements FilmDbStorage {
     }
 
     private Film makeFilm(ResultSet rs, int rowNum) throws SQLException {
-        //todo: добавить правильную реализацию добавления нескольких жанров фильму через таблицы GENRE и GENRE_LIST
         Film film = new Film();
         film.setId(rs.getLong("FILM_ID"));
         film.setName(rs.getString("NAME"));
@@ -138,14 +195,8 @@ public class FilmDbStorageImpl implements FilmDbStorage {
         film.setDuration(rs.getLong("DURATION"));
         final long mpaId = rs.getLong("MPA_ID");
         film.setMpa(setMpaForFilm(mpaId));
-        final long genreId = rs.getLong("GENRE_ID");
-        final Set<Genre> genres = new HashSet<>();
-        if (genreId == 0) {
-            film.setGenres(null);
-        } else {
-            genres.add(getGenre(genreId));
-            film.setGenres(genres);
-        }
+        final Set<Genre> genres = findGenreListByFilmId(film.getId());
+        film.setGenres(genres);
         return film;
     }
 
@@ -186,22 +237,19 @@ public class FilmDbStorageImpl implements FilmDbStorage {
     }
 
     public List<Film> getTenPopularFilmsOfLikes(long count) {//1.3. GET .../films/popular?count={count} - возвращает список из первых count фильмов по количеству лайков
-        //todo: проверить правильность вывода метода
-        //todo: добавить правильную реализацию добавления нескольких жанров фильму через таблицы GENRE и GENRE_LIST
-        final String sqlQuery = "SELECT FL.FILM_ID, " +
-                "F.NAME, F.DESCRIPTION, F.RELEASE_DATE, F.DURATION, F.MPA_ID, G.GENRE_ID  " +
+        final String sqlQuery = "SELECT F.FILM_ID, " +
+                "F.NAME, F.DESCRIPTION, F.RELEASE_DATE, F.DURATION, F.MPA_ID " +
                 "FROM LIKES_LIST AS FL " +
                 "JOIN FILMS AS F ON F.FILM_ID = FL.FILM_ID " +
-                "JOIN MPA M on M.MPA_ID = F.MPA_ID " +
-                "JOIN GENRE G on G.GENRE_ID = F.GENRE_ID " +
                 "GROUP BY FL.FILM_ID " +
                 "ORDER BY COUNT(FL.USER_ID) DESC " +
                 "LIMIT ?";
         final List<Film> films = jdbcTemplate.query(sqlQuery, this::makeFilm, count);
         if (films.size() < 1) {
-            System.out.println("Нет фильмов для выдачи. Поставьте лайки фильмам и повторите попытку.");
+            return getFilmsList();
+        } else {
+            return films;
         }
-        return films;
     }
 
     private Genre makeGenre(ResultSet resultSet, int rowNum) throws SQLException {

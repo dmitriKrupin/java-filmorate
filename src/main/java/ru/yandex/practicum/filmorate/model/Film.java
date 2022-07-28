@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.model;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
 import java.util.Set;
 
 @Data

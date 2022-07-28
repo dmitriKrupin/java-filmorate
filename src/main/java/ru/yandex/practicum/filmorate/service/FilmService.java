@@ -35,18 +35,8 @@ public class FilmService {
         filmDbStorage.deleteLikeForFilm(filmId, userId);
     }
 
-    public List<Film> getTenPopularFilmsOfLikes(long count) { //вывод популярных фильмов по количеству лайков или первых 10
+    public List<Film> getTenPopularFilmsOfLikes(long count) {
         return filmDbStorage.getTenPopularFilmsOfLikes(count);
-        /*List<Film> popularFilmsList = new ArrayList<>();
-        List<Film> storageFilmsList = filmDbStorage.getFilmsList();
-        if (count > storageFilmsList.size()) {
-            count = storageFilmsList.size();
-        }
-        Collections.sort(storageFilmsList);
-        for (int i = 0; i < count; i++) {
-            popularFilmsList.add(storageFilmsList.get(i));
-        }
-        return popularFilmsList;*/
     }
 
     public List<Film> getAllFilms() {

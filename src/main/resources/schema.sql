@@ -52,6 +52,13 @@ create table if not exists GENRE_LIST
         foreign key (GENRE_ID) references GENRE
 );
 
+create unique index if not exists GENRE_LIST_GENRE_ID_FILM_ID_UINDEX
+    on GENRE_LIST (GENRE_ID, FILM_ID);
+
+alter table GENRE_LIST
+    add constraint if not exists GENRE_LIST_PK
+        primary key (GENRE_ID, FILM_ID);
+
 create table if not exists USERS
 (
     USER_ID  INTEGER auto_increment,
