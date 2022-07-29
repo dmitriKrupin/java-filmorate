@@ -210,7 +210,7 @@ public class FilmDbStorageImpl implements FilmDbStorage {
     }
 
     public void addLikeForFilm(long filmId, long userId) { //1.6. PUT  .../films/{id}/like/{userId} — пользователь ставит лайк фильму
-        final String sqlQuery = "INSERT INTO LIKES_LIST (FILM_ID, USER_ID) " +
+        final String sqlQuery = "INSERT INTO LIKES (FILM_ID, USER_ID) " +
                 "VALUES (?, ?)";
         final KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
@@ -223,7 +223,7 @@ public class FilmDbStorageImpl implements FilmDbStorage {
 
     public void deleteLikeForFilm(long filmId, long userId) { //1.7. DELETE .../films/{id}/like/{userId} — пользователь удаляет лайк
         if (filmId > 0 && userId > 0) {
-            final String sqlQuery = "DELETE FROM LIKES_LIST WHERE FILM_ID = ? AND USER_ID = ?";
+            final String sqlQuery = "DELETE FROM LIKES WHERE FILM_ID = ? AND USER_ID = ?";
             jdbcTemplate.update(connection -> {
                 PreparedStatement stm = connection.prepareStatement(sqlQuery);
                 stm.setLong(1, filmId);
@@ -239,7 +239,7 @@ public class FilmDbStorageImpl implements FilmDbStorage {
     public List<Film> getTenPopularFilmsOfLikes(long count) {//1.3. GET .../films/popular?count={count} - возвращает список из первых count фильмов по количеству лайков
         final String sqlQuery = "SELECT F.FILM_ID, " +
                 "F.NAME, F.DESCRIPTION, F.RELEASE_DATE, F.DURATION, F.MPA_ID " +
-                "FROM LIKES_LIST AS FL " +
+                "FROM LIKES AS FL " +
                 "JOIN FILMS AS F ON F.FILM_ID = FL.FILM_ID " +
                 "GROUP BY FL.FILM_ID " +
                 "ORDER BY COUNT(FL.USER_ID) DESC " +

@@ -73,7 +73,7 @@ create table if not exists USERS
 create unique index if not exists USERS_USER_ID_UINDEX
     on USERS (USER_ID);
 
-create table if not exists LIKES_LIST
+create table if not exists LIKES
 (
     FILM_ID INTEGER not null,
     USER_ID INTEGER not null,
@@ -84,9 +84,9 @@ create table if not exists LIKES_LIST
 );
 
 create unique index if not exists LIKES_LIST_FILM_ID_USER_ID_UINDEX
-    on LIKES_LIST (FILM_ID, USER_ID);
+    on LIKES (FILM_ID, USER_ID);
 
-create table if not exists FRIENDS_ID_LIST
+create table if not exists FRIENDS
 (
     USER_ID                   INTEGER not null,
     FRIENDS_ID                INTEGER not null,
@@ -98,4 +98,4 @@ create table if not exists FRIENDS_ID_LIST
 );
 
 create unique index if not exists FRIENDS_ID_LIST_USER_ID_FRIENDS_ID_STATUS_APPLICATION_FRIEND_UINDEX
-    on FRIENDS_ID_LIST (USER_ID, FRIENDS_ID, STATUS_APPLICATION_FRIEND);
+    on FRIENDS (USER_ID, FRIENDS_ID, STATUS_APPLICATION_FRIEND);

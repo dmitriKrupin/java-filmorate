@@ -1,13 +1,17 @@
 package ru.yandex.practicum.filmorate.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 import java.util.Set;
 
 @Data
 @EqualsAndHashCode
+@NoArgsConstructor
+@AllArgsConstructor
 public class Film implements Comparable<Film> {
     private long id;
     private String name; //название не может быть пустым;
