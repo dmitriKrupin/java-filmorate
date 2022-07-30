@@ -1,11 +1,13 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.storage.dao.UserDbStorage;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.dao.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.dao.UserStorage;
 
-import java.util.*;
+import java.util.List;
 
 /**
  * Создайте UserService, который будет отвечать за такие операции с пользователями, как добавление в друзья,
@@ -16,43 +18,42 @@ import java.util.*;
 //Добавьте к ним аннотацию @Service — тогда к ним можно будет получить доступ из контроллера.
 @Service
 public class UserService {
-    @Autowired
-    private final UserDbStorage userDbStorage;
+    private final UserStorage userStorage;
 
-    public UserService(UserDbStorage userDbStorage) {
-        this.userDbStorage = userDbStorage;
+    public UserService(@Qualifier("UserDbStorageImpl") UserStorage userStorage) {
+        this.userStorage = userStorage;
     }
 
     public void addFriendsInFriendsList(Long userId, Long friendId) {
-        userDbStorage.addFriendsInFriendsList(userId, friendId);
+        userStorage.addFriendsInFriendsList(userId, friendId);
     }
 
     public void deleteFriendFromFriendsList(Long userId, Long friendId) {
-        userDbStorage.deleteFriendFromFriendsList(userId, friendId);
+        userStorage.deleteFriendFromFriendsList(userId, friendId);
     }
 
     public List<User> getCommonFriendsList(long id, long otherId) {
-        return userDbStorage.getCommonFriendsList(id, otherId);
+        return userStorage.getCommonFriendsList(id, otherId);
     }
 
     public List<User> getUsersAll() {
-        return userDbStorage.getUsersAll();
+        return userStorage.getUsersAll();
     }
 
     public List<User> getFriendsList(long id) {
-        return userDbStorage.getFriendsList(id);
+        return userStorage.getFriendsList(id);
     }
 
     public User findUserById(Long id) {
-        return userDbStorage.findUserById(id);
+        return userStorage.findUserById(id);
     }
 
     public User createUser(User user) {
-        userDbStorage.addUser(user);
+        userStorage.addUser(user);
         return user;
     }
 
     public void updateUser(User user) {
-        userDbStorage.updateUser(user);
+        userStorage.updateUser(user);
     }
 }

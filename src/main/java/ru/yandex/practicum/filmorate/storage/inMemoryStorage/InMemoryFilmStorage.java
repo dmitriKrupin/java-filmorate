@@ -3,6 +3,9 @@ package ru.yandex.practicum.filmorate.storage.inMemoryStorage;
 import lombok.Data;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MPA;
+import ru.yandex.practicum.filmorate.storage.dao.FilmStorage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +43,19 @@ public class InMemoryFilmStorage implements FilmStorage {
         }
     }
 
+    @Override
+    public void addLikeForFilm(long filmId, long userId) {
+    }
+
+    @Override
+    public void deleteLikeForFilm(long filmId, long userId) {
+    }
+
+    @Override
+    public List<Film> getTenPopularFilmsOfLikes(long count) {
+        return null;
+    }
+
     public Long filmIdCounter() {
         return filmIdCounter++;
     }
@@ -56,5 +72,25 @@ public class InMemoryFilmStorage implements FilmStorage {
             }
         }
         return film;
+    }
+
+    @Override
+    public List<Genre> getAllGenres() {
+        return null;
+    }
+
+    @Override
+    public Genre getGenre(long id) {
+        return null;
+    }
+
+    @Override
+    public List<MPA> getAllMPA() {
+        return null;
+    }
+
+    @Override
+    public MPA getMPA(long id) {
+        return null;
     }
 }

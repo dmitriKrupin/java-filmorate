@@ -6,16 +6,16 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.storage.dao.UserDbStorage;
 import ru.yandex.practicum.filmorate.exeption.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.dao.UserStorage;
 
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.List;
 
-@Component
-public class UserDbStorageImpl implements UserDbStorage {
+@Component("UserDbStorageImpl")
+public class UserDbStorageImpl implements UserStorage {
     private final Logger log = LoggerFactory.getLogger(FilmDbStorageImpl.class);
     private final JdbcTemplate jdbcTemplate;
 

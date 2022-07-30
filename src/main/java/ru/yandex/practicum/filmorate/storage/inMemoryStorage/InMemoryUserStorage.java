@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage.inMemoryStorage;
 import lombok.Data;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.dao.UserStorage;
 
 import java.util.*;
 
@@ -40,6 +41,19 @@ public class InMemoryUserStorage implements UserStorage {
                 userList.replace(user.getId(), user);
             }
         }
+    }
+
+    @Override
+    public void addFriendsInFriendsList(Long userId, Long friendId) {
+    }
+
+    @Override
+    public void deleteFriendFromFriendsList(Long userId, Long friendId) {
+    }
+
+    @Override
+    public List<User> getCommonFriendsList(long id, long otherId) {
+        return null;
     }
 
     public Long userIdCounter() {
