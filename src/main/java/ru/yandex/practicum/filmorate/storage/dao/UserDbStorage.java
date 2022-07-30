@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.dao;
 
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.inMemoryStorage.UserStorage;
 
 import java.util.List;
 
@@ -13,16 +14,16 @@ import java.util.List;
  * позволяющие сохранять пользователей и фильмы в базу данных и получать их из неё.
  */
 
-public interface UserDbStorage {
-    void addUser(User user);
-
-    void deleteUser(User user);
-
-    void updateUser(User user);
-
+public interface UserDbStorage extends UserStorage {
     User findUserById(Long userId);
 
     List<User> getUsersAll();
 
     List<User> getFriendsList(long id);
+
+    List<User> getCommonFriendsList(long id, long otherId);
+
+    void deleteFriendFromFriendsList(Long userId, Long friendId);
+
+    void addFriendsInFriendsList(Long userId, Long friendId);
 }

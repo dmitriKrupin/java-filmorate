@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
-import ru.yandex.practicum.filmorate.storage.impl.FilmDbStorageImpl;
+import ru.yandex.practicum.filmorate.storage.dao.FilmDbStorage;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.*;
@@ -18,13 +18,11 @@ import java.util.*;
 //Добавьте к ним аннотацию @Service — тогда к ним можно будет получить доступ из контроллера.
 @Service
 public class FilmService {
-    @Autowired
-    FilmDbStorageImpl filmDbStorage;
-    private final UserService userService;
+    private final FilmDbStorage filmDbStorage;
 
     @Autowired
-    public FilmService(UserService userService) {
-        this.userService = userService;
+    public FilmService(FilmDbStorage filmDbStorage) {
+        this.filmDbStorage = filmDbStorage;
     }
 
     public void addLikeForFilm(long filmId, long userId) {

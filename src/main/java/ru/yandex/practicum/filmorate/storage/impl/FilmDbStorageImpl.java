@@ -177,6 +177,7 @@ public class FilmDbStorageImpl implements FilmDbStorage {
         });
     }
 
+    @Override
     public Film findFilmById(long id) { //1.2. GET .../films/{id} - получение каждого фильма по их уникальному идентификатору
         final String sqlQuery = "SELECT * FROM FILMS WHERE FILM_ID = ?";
         final List<Film> films = jdbcTemplate.query(sqlQuery, this::makeFilm, id);
@@ -200,6 +201,7 @@ public class FilmDbStorageImpl implements FilmDbStorage {
         return film;
     }
 
+    @Override
     public List<Film> getFilmsList() { //1.1. GET .../films - получение всех фильмов
         final String sqlQuery = "SELECT * FROM FILMS";
         final List<Film> films = jdbcTemplate.query(sqlQuery, this::makeFilm);
@@ -209,6 +211,7 @@ public class FilmDbStorageImpl implements FilmDbStorage {
         return films;
     }
 
+    @Override
     public void addLikeForFilm(long filmId, long userId) { //1.6. PUT  .../films/{id}/like/{userId} — пользователь ставит лайк фильму
         final String sqlQuery = "INSERT INTO LIKES (FILM_ID, USER_ID) " +
                 "VALUES (?, ?)";
@@ -221,6 +224,7 @@ public class FilmDbStorageImpl implements FilmDbStorage {
         }, keyHolder);
     }
 
+    @Override
     public void deleteLikeForFilm(long filmId, long userId) { //1.7. DELETE .../films/{id}/like/{userId} — пользователь удаляет лайк
         if (filmId > 0 && userId > 0) {
             final String sqlQuery = "DELETE FROM LIKES WHERE FILM_ID = ? AND USER_ID = ?";
@@ -236,6 +240,7 @@ public class FilmDbStorageImpl implements FilmDbStorage {
         }
     }
 
+    @Override
     public List<Film> getTenPopularFilmsOfLikes(long count) {//1.3. GET .../films/popular?count={count} - возвращает список из первых count фильмов по количеству лайков
         final String sqlQuery = "SELECT F.FILM_ID, " +
                 "F.NAME, F.DESCRIPTION, F.RELEASE_DATE, F.DURATION, F.MPA_ID " +
@@ -259,6 +264,7 @@ public class FilmDbStorageImpl implements FilmDbStorage {
         return genre;
     }
 
+    @Override
     public Genre getGenre(long id) { // GET /genres/{id}
         final String sqlQuery = "SELECT * FROM GENRE WHERE GENRE_ID = ?";
         final List<Genre> genre = jdbcTemplate.query(sqlQuery, this::makeGenre, id);
@@ -268,6 +274,7 @@ public class FilmDbStorageImpl implements FilmDbStorage {
         return genre.get(0);
     }
 
+    @Override
     public List<Genre> getAllGenres() { // GET /genres
         final String sqlQuery = "SELECT * FROM GENRE";
         final List<Genre> genreList = jdbcTemplate.query(sqlQuery, this::makeGenre);
@@ -285,6 +292,7 @@ public class FilmDbStorageImpl implements FilmDbStorage {
         return mpa;
     }
 
+    @Override
     public List<MPA> getAllMPA() { // GET /mpa
         final String sqlQuery = "SELECT * FROM MPA";
         final List<MPA> mpaList = jdbcTemplate.query(sqlQuery, this::makeMPA);
@@ -294,6 +302,7 @@ public class FilmDbStorageImpl implements FilmDbStorage {
         return mpaList;
     }
 
+    @Override
     public MPA getMPA(long id) { // GET /mpa/{id}
         final String sqlQuery = "SELECT * FROM MPA WHERE MPA_ID = ?";
         final List<MPA> mpaList = jdbcTemplate.query(sqlQuery, this::makeMPA, id);

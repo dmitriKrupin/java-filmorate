@@ -97,6 +97,7 @@ public class UserDbStorageImpl implements UserDbStorage {
         return users;
     }
 
+    @Override
     public void addFriendsInFriendsList(Long userId, Long friendId) { //2.7. PUT .../users/{id}/friends/{friendId} — добавление в друзья
         if (!validateFriendInFriendsList(userId, friendId)) {
             final String sqlQueryUser = "INSERT INTO FRIENDS (USER_ID, FRIENDS_ID, STATUS_APPLICATION_FRIEND) " +
@@ -141,6 +142,7 @@ public class UserDbStorageImpl implements UserDbStorage {
         }
     }
 
+    @Override
     public void deleteFriendFromFriendsList(Long userId, Long friendId) { //удаление пользователя из друзей
         final String sqlQueryUser = "UPDATE FRIENDS AS FL " +
                 "SET FL.STATUS_APPLICATION_FRIEND = false " +
@@ -166,6 +168,7 @@ public class UserDbStorageImpl implements UserDbStorage {
         return users;
     }
 
+    @Override
     public List<User> getCommonFriendsList(long id, long otherId) { //2.4. GET .../users/{id}/friends/common/{otherId} — список друзей, общих с другим пользователем
         final String sqlQuery = "SELECT * " +
                 "FROM USERS " +
