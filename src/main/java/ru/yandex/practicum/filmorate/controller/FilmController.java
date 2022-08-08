@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exeption.NotFoundException;
 import ru.yandex.practicum.filmorate.exeption.ValidationException;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -63,7 +65,6 @@ public class FilmController {
 
     @PostMapping(value = "/films") //добавление фильма;
     public Film createFilm(@Valid @RequestBody Film film) {
-        film.setId(filmService.filmIdCounter());
         if (validate(film)) {
             log.info(String.format("Сохранение фильма с id: %d, наименование: %s", film.getId(), film.getName()));
             return filmService.createFilm(film);
@@ -98,20 +99,36 @@ public class FilmController {
         filmService.deleteLikeForFilm(id, userId);
     }
 
+    @GetMapping(value = "/genres") // GET /genres - получение списка всех жанров
+    public List<Genre> getAllGenres() {
+        return filmService.getAllGenres();
+    }
+
+    @GetMapping(value = "/genres/{id}") //GET /genres/{id} - получение списка жанров по идентификатору
+    public Genre getGenre(@PathVariable long id) {
+        return filmService.getGenre(id);
+    }
+
+    @GetMapping(value = "/mpa")
+    public List<MPA> getAllMPA() { // GET /mpa - получение рейтинга
+        return filmService.getAllMPA();
+    }
+
+    @GetMapping(value = "/mpa/{id}")
+    public MPA getMPA(@PathVariable long id) { // GET /mpa/{id} - получение рейтинга по идентификатору
+        return filmService.getMPA(id);
+    }
+
     private boolean validate(Film film) {
         if (film.getName().isEmpty()) {
-            filmService.minusFilmIdCounter();
             throw new ValidationException("Ошибка! Название не может быть пустым!");
         } else if (film.getDescription().length() > 200) {
-            filmService.minusFilmIdCounter();
             throw new ValidationException("Ошибка! Максимальная длина описания больше 200 символов!");
         } else if (LocalDate.parse(film.getReleaseDate(), formatter).isBefore(LocalDate.of(1895, 12, 28))) {
-            filmService.minusFilmIdCounter();
             throw new ValidationException("Ошибка! Дата релиза '" + film.getReleaseDate() + "' — должна быть не раньше 28 декабря 1895 года");
         } else if (film.getDuration() <= 0) {
-            filmService.minusFilmIdCounter();
             throw new ValidationException("Ошибка! Продолжительность фильма должна быть положительной!");
-        } else if (film.getId() <= 0) {
+        } else if (film.getId() < 0) {
             throw new NotFoundException("Ошибка! Такого id '" + film.getId() + "' не найдено!");
         } else {
             return true;

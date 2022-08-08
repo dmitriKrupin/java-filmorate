@@ -13,18 +13,7 @@ import javax.validation.Valid;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-
-/**
- * 3. Убедитесь, что ваше приложение возвращает корректные HTTP-коды.
- * 3.1. 400 — если ошибка валидации: ValidationException;
- * BAD_REQUEST(400, HttpStatus.Series.CLIENT_ERROR, "Bad Request"),
- * <p>
- * 3.2. 404 — для всех ситуаций, если искомый объект не найден;
- * NOT_FOUND(404, HttpStatus.Series.CLIENT_ERROR, "Not Found"),
- * <p>
- * 3.3. 500 — если возникло исключение.
- * INTERNAL_SERVER_ERROR(500, HttpStatus.Series.SERVER_ERROR, "Internal Server Error")
- */
+import java.util.Optional;
 
 @RestController
 public class UserController {
@@ -71,7 +60,7 @@ public class UserController {
 
     @PostMapping(value = "/users") //создание пользователя;
     public User createUser(@Valid @RequestBody User user) {
-        user.setId(userService.userIdCounter());
+        //user.setId(userService.userIdCounter());
         if (validate(user)) {
             log.info(String.format("Сохранение пользователя с id: %d, наименование: %s", user.getId(), user.getName()));
             return userService.createUser(user);
@@ -112,12 +101,10 @@ public class UserController {
     private boolean validate(User user) {
         //логин не может быть пустым и содержать пробелы;
         if (user.getLogin().isEmpty() || user.getLogin().contains(" ")) {
-            userService.minusUserIdCounter();
             throw new ValidationException("Ошибка! Логин не может быть пустым и содержать пробелы!");
         }
         //дата рождения не может быть в будущем.
         else if (LocalDate.parse(user.getBirthday(), formatter).isAfter(LocalDate.now())) {
-            userService.minusUserIdCounter();
             throw new ValidationException("Ошибка! Дата рождения: '" + user.getBirthday() + "' не может быть в будущем!");
         }
         //имя для отображения может быть пустым — в таком случае будет использован логин;
@@ -127,9 +114,8 @@ public class UserController {
         }
         //электронная почта не может быть пустой и должна содержать символ @;
         else if (user.getEmail().isEmpty() || !user.getEmail().contains("@")) {
-            userService.minusUserIdCounter();
             throw new ValidationException("Ошибка! Электронная почта не может быть пустой и должна содержать символ @");
-        } else if (user.getId() <= 0) {
+        } else if (user.getId() < 0) {
             throw new NotFoundException("Ошибка! Такого id '" + user.getId() + "' не найдено!");
         } else {
             return true;

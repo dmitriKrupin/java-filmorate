@@ -1,12 +1,15 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exeption.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MPA;
+import ru.yandex.practicum.filmorate.storage.dao.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.dao.UserStorage;
 
-import java.util.*;
+import java.util.List;
 
 /**
  * Создайте FilmService, который будет отвечать за операции с фильмами, — добавление и удаление лайка,
@@ -16,63 +19,55 @@ import java.util.*;
 
 //Добавьте к ним аннотацию @Service — тогда к ним можно будет получить доступ из контроллера.
 @Service
-public class FilmService extends InMemoryFilmStorage {
-    private final UserService userService;
-    private final InMemoryFilmStorage filmStorage = new InMemoryFilmStorage();
+public class FilmService {
+    private final FilmStorage filmStorage;
 
-    @Autowired
-    public FilmService(UserService userService) {
-        this.userService = userService;
+    public FilmService(@Qualifier("FilmDbStorageImpl") FilmStorage filmStorage) {
+        this.filmStorage = filmStorage;
     }
 
-    public void addLikeForFilm(long filmId, long userId) { //добавление лайка
-        Film film = filmStorage.findFilmById(filmId);
-        Set<Long> likesList;
-        if (film.getLikesList() != null) {
-            likesList = film.getLikesList();
-        } else {
-            likesList = new TreeSet<>();
-        }
-        likesList.add(userId);
-        film.setLikesList(likesList);
+    public void addLikeForFilm(long filmId, long userId) {
+        filmStorage.addLikeForFilm(filmId, userId);
     }
 
-    public void deleteLikeForFilm(long filmId, long userId) { //удаление лайка
-        Film film = filmStorage.findFilmById(filmId);
-        if (film.getLikesList() != null) {
-            Set<Long> likeList = film.getLikesList();
-            likeList.remove(userId);
-            film.setLikesList(likeList);
-        } else {
-            throw new NotFoundException("Лайка от пользователя с id: " + userId + " не найдено!");
-        }
+    public void deleteLikeForFilm(long filmId, long userId) {
+        filmStorage.deleteLikeForFilm(filmId, userId);
     }
 
-    public List<Film> getTenPopularFilmsOfLikes(long count) { //вывод популярных фильмов по количеству лайков или первых 10
-        List<Film> popularFilmsList = new ArrayList<>();
-        List<Film> storageFilmsList = filmStorage.getFilmsList();
-        if (count > storageFilmsList.size() /*filmsList.size()*/) {
-            count = storageFilmsList.size();
-        }
-        Collections.sort(storageFilmsList);
-        for (int i = 0; i < count; i++) {
-            popularFilmsList.add(storageFilmsList.get(i));
-        }
-        return popularFilmsList;
+    public List<Film> getTenPopularFilmsOfLikes(long count) {
+        return filmStorage.getTenPopularFilmsOfLikes(count);
     }
 
     public List<Film> getAllFilms() {
         return filmStorage.getFilmsList();
-        //return filmsList;
     }
 
     public Film createFilm(Film film) {
         filmStorage.addFilm(film);
-        //filmsList.add(film);
         return film;
     }
 
     public void updateFilm(Film film) {
         filmStorage.updateFilm(film);
+    }
+
+    public Film findFilmById(long id) {
+        return filmStorage.findFilmById(id);
+    }
+
+    public List<Genre> getAllGenres() { // GET /genres
+        return filmStorage.getAllGenres();
+    }
+
+    public Genre getGenre(long id) { // GET /genres/{id}
+        return filmStorage.getGenre(id);
+    }
+
+    public List<MPA> getAllMPA() { // GET /mpa
+        return filmStorage.getAllMPA();
+    }
+
+    public MPA getMPA(long id) { // GET /mpa/{id}
+        return filmStorage.getMPA(id);
     }
 }
